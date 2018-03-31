@@ -55,16 +55,17 @@ classdef VentricularSeptalDefectCirculation < handle
             % x: state variables [ventricular pressure; atrial pressure; arterial pressure; aortic flow]
             % dx: time derivatives of state variables
             
-            flow = x(4);
-
-            if x(2) > x(1) %flow == 0 
-                disp("x(2) > x(1)");
+            pulmonaryFlow = x(6);
+            aorticFlow = x(7);
+            t
+            if x(1) > x(2) || x(3) > x(4) %flow == 0 
+                disp("1 - Filling");
                 A = filling(C, t, 1);
-            elseif (x(1) > x(3)) || (flow > 0) %FINISHED
-                disp("x(1) > x(3)) || (flow > 0");
+            elseif (x(4) > x(5)) || (pulmonaryFlow > 0) || (aorticFlow > 0)%FINISHED
+                disp("2 - Ejection");
                 A = ejection(C, t, 1);
             else %flow == 0
-                disp("flow == 0");
+                disp("0 - Isovolumic");
                 A = isovolumic(C, t, 1);
             end
             dx = A*(x);
@@ -118,7 +119,6 @@ classdef VentricularSeptalDefectCirculation < handle
             else
                 res7 = C.R7;
             end
-
             %elastance of the left side of the heart
             elR = elastance(C,t);
             delR_dt = elastanceFiniteDifference(C, t);
@@ -128,9 +128,9 @@ classdef VentricularSeptalDefectCirculation < handle
             delL_dt = elastanceFiniteDifference(C, t);
             
             A = [(1/(C.R8*C.C1)+1/(C.R1*C.C1)) -1/(C.C1*C.R1) 0 0 -1/(C.R8*C.C1) 0 0; %x1'
-                -elR/C.R1 delR_dt/elR+elR/C.R7+elR/C.R1 0 elR/C.R7 0 0 0; %x2'
+                elR/C.R1 (delR_dt/elR+elR/C.R7-elR/C.R1) 0 -elR/C.R7 0 0 0; %x2'
                 0 0 1/(C.C3*C.R4) -1/(C.C3*C.R4) 0 0 0; %x3'
-                0 -elL/C.R7 -elL/(C.R4) (elL/C.R4+elL/C.R7+delL_dt/elL) 0 0 0; %x4'
+                0 elL/C.R7 -elL/(C.R4) (elL/C.R4-elL/C.R7+delL_dt/elL) 0 0 0; %x4'
                 1/(C.C5*C.R8) 0 0 0 -1/(C.C5*C.R8) 0 0; %x5'
                 0 0 0 0 0 0 0; %x6'
                 0 0 0 0 0 0 0]; %x7'
@@ -175,7 +175,7 @@ classdef VentricularSeptalDefectCirculation < handle
               A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
                  0 (delR_dt/elR+elR/C.R7) 0 -elR/C.R7 0 elR 0; %x2'
                  0 0 0 0 0 1/C.C3 0; %x3'
-                 0 -elL*C.R7 0 (delL_dt/elL+elL/C.R7)  0 0 elL; %x4'
+                 0 -elL/C.R7 0 (delL_dt/elL+elL/C.R7)  0 0 elL; %x4'
                  -1/(C.C5*C.R8) 0 0 0 1/(C.R8*C.C5) 0 1/C.C5; %x5'
                  0 -1/C.L1 1/C.L1 0 0 -(C.R2+C.R3)/C.L1 0; %x6'
                  0 0 0 -1/C.L2 1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
