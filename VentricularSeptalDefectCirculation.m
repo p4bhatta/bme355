@@ -51,6 +51,15 @@ classdef VentricularSeptalDefectCirculation < handle
         end
         
         function dx = getDerivative(C, t, x)
+            
+            % x1 - right atrial pressure
+            % x2 - right ventricular pressure
+            % x3 - left atrial pressure
+            % x4 - left ventricular pressure
+            % x5 - arterial pressure
+            % x6 - pulmonary artery flow
+            % x7 - aortic flow
+
             % t: time
             % x: state variables [ventricular pressure; atrial pressure; arterial pressure; aortic flow]
             % dx: time derivatives of state variables
