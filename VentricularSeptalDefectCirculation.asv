@@ -89,9 +89,9 @@ classdef VentricularSeptalDefectCirculation < handle
             
             if (isSevere == 1) 
                 A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
-                0 (elR/C.R7-delR_dt/elR) 0 -elR/C.R7 0 0 0; %x2'
+                0 1/(elR*C.R7)-delR_dt/(elR*C.R7) 0 -1/(elR*C.R7) 0 0 0; %x2'
                 0 0 0 0 0 0 0; %x3'
-                0 elL/C.R7 0 (-elL/C.R7-delL_dt/elL) 0 0 0; %x4'
+                0 1/(elL*C.R7) 0 -1/(elL*C.R7)-delL_dt/(elL*C.R7) 0 0 0; %x4'
                 1/(C.C5*C.R8) 0 0 0 -1/(C.C5*C.R8) 0 0; %x5'
                 0 0 0 0 0 0 0; %x6'
                 0 0 0 0 0 0 0]; %x7'
@@ -173,9 +173,9 @@ classdef VentricularSeptalDefectCirculation < handle
 %                  0 -1/C.L1 -1/C.L1 0 0 -(C.R2+C.R3)/C.L1 0; %x6'
 %                  0 0 0 -1/C.L2 -1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
               A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
-                 0 (delR_dt/elR+elR/C.R7) 0 -elR/C.R7 0 elR 0; %x2'
+                 0 (elR/-delR_dt+elR/C.R7) 0 -elR/C.R7 0 elR 0; %x2'
                  0 0 0 0 0 1/C.C3 0; %x3'
-                 0 -elL*C.R7 0 (delL_dt/elL+elL/C.R7)  0 0 elL; %x4'
+                 0 -elL*C.R7 0 (-elL/delL_dt+elL/C.R7)  0 0 elL; %x4'
                  -1/(C.C5*C.R8) 0 0 0 1/(C.R8*C.C5) 0 1/C.C5; %x5'
                  0 -1/C.L1 1/C.L1 0 0 -(C.R2+C.R3)/C.L1 0; %x6'
                  0 0 0 -1/C.L2 1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
