@@ -14,19 +14,21 @@ classdef VentricularSeptalDefectCirculation < handle
         
         nonSlackBloodVolume = 210; % (ml)
         
+        %Resistances for the 
         R1 = .5; % between .5 and 2
         R2 = .005;
         R3 = .001;
-        R4 = .0398;
         
-        R5 = .5; % between .5 and 2
-        R6 = .005;
-        R7 = .001;
+        R4 = .5;
+        R5 = .005; % between .5 and 2
+        R6 = .001;
+        
+        R7 = .0398;
         R8 = .0398;
 
         C1= 4.4;
-        C3 = 1.33;
-        C5 = 4;
+        C3 = 5.55;
+        C5 = 1.33;
         
         L1 = .0005;
         L2 = .0005;
@@ -227,7 +229,7 @@ classdef VentricularSeptalDefectCirculation < handle
             % pulmonary loop. 
             
             % 
-            initialState = [0; C.nonSlackBloodVolume/C.C1; 0; 0; 0; 0; 0]; 
+            initialState = [C.nonSlackBloodVolume/C.C1; 0; C.nonSlackBloodVolume/C.C3; 0; 0; 0; 0]; 
             ofun = @(t,x) C.getDerivative(t,x); % wrapper function because ode45 expects a function rather than a method
             [time, state] = ode45(ofun, [0 simulationTime], initialState);
 
