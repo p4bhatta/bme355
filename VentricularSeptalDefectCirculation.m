@@ -91,11 +91,10 @@ classdef VentricularSeptalDefectCirculation < handle
             % isSevere: 0 or 1 specifying if it is moderate or severe VSD
 
             %elastance of the left side of the heart
-            elR = elastance(C,t);
+            [elR,elL] = elastance(C,t);
             delR_dt = elastanceFiniteDifference(C, t);
             
             %elastance of the right side of the heart
-            elL = elastance(C,t);
             delL_dt = elastanceFiniteDifference(C, t);
             
             C2 = 1/elL;
@@ -133,11 +132,10 @@ classdef VentricularSeptalDefectCirculation < handle
                 res7 = C.R7;
             end
             %elastance of the left side of the heart
-            elR = elastance(C,t);
+            [elR,elL] = elastance(C,t);
             delR_dt = elastanceFiniteDifference(C, t);
 
             %elastance of the right side of the heart
-            elL = elastance(C,t);
             delL_dt = elastanceFiniteDifference(C, t);
             
             A = [(1/(C.R8*C.C1)+1/(C.R1*C.C1)) -1/(C.C1*C.R1) 0 0 -1/(C.R8*C.C1) 0 0; %x1'
@@ -163,11 +161,10 @@ classdef VentricularSeptalDefectCirculation < handle
             end
 
             %elastance of the left side of the heart
-            elR = elastance(C,t);
+            [elR,elL] = elastance(C,t);
             delR_dt = elastanceFiniteDifference(C, t);
 
             %elastance of the right side of the heart
-            elL = elastance(C,t);
             delL_dt = elastanceFiniteDifference(C, t);
             
 %             A = [1/(C.C1*C.R8) 0 0 0 1/(C.C1*C.R8) 0 0; %x1'
@@ -223,13 +220,11 @@ classdef VentricularSeptalDefectCirculation < handle
         
         function simulate(C, simulationTime)
             % simulationTime: # seconds to simulate
-            
             % We put all the blood pressure in the atria as an
             % initial condition. Note that we can't get the total blood
             % volume by multiplying by C2, because we're missing the
             % pulmonary loop. 
             
-            % 
             initialState = [C.nonSlackBloodVolume/C.C1; 0; C.nonSlackBloodVolume/C.C3; 0; 0; 0; 0]; 
             ofun = @(t,x) C.getDerivative(t,x); % wrapper function because ode45 expects a function rather than a method
             [time, state] = ode45(ofun, [0 simulationTime], initialState);
