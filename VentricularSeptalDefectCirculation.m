@@ -194,7 +194,7 @@ classdef VentricularSeptalDefectCirculation < handle
                  0 0 0 -1/C.L2 1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
         end
         
-        function [result1,result2] = elastance(C, t)
+        function [elR,elL] = elastance(C, t)
             % t: time
             % result: time-varying elastance
             
@@ -204,8 +204,8 @@ classdef VentricularSeptalDefectCirculation < handle
             neg = find(tn < 0); %this line and the next are for generality 
             tn(neg) = tn(neg) + C.Tmax; % in case you give a t < 0
             En = 1.55 * (tn/.7).^1.9 ./ (1 + (tn/.7).^1.9) ./ (1 + (tn/1.17).^21.9); %En is normalized elastance (between 0 and 1)
-            result2 = (C.EmaxL-C.Emin)*En+C.Emin; % this rescales the normalized elastance to the range (Emin,Emax)
-            result1 = (C.EmaxR-C.Emin)*En+C.Emin; 
+            elL = (C.EmaxL-C.Emin)*En+C.Emin; % this rescales the normalized elastance to the range (Emin,Emax)
+            elR = (C.EmaxR-C.Emin)*En+C.Emin; 
         end
         
         function result = elastanceFiniteDifference(C, t)
