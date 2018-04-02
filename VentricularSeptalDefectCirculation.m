@@ -235,7 +235,7 @@ classdef VentricularSeptalDefectCirculation < handle
             plot(time, state(:, 1), 'r');
             plot(time, state(:, 2), 'g');
             plot(time, state(:, 5) + state(:, 4)*C.R4, 'b');
-            title('Press');
+            title('Left Pressure');
             legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
@@ -248,6 +248,7 @@ classdef VentricularSeptalDefectCirculation < handle
             plot(time, state(:, 3), 'r');
             plot(time, state(:, 4), 'g');
             plot(time, state(:, 5) + state(:, 4)*C.R4, 'b');
+            title('Right Pressure');
             legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
