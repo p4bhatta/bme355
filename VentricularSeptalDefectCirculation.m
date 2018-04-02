@@ -9,7 +9,8 @@ classdef VentricularSeptalDefectCirculation < handle
     end
     
     properties (Access = public)
-        Emax;
+        EmaxL;
+        EmaxR;
         Emin;
         
         nonSlackBloodVolume = 210; % (ml)
@@ -35,13 +36,14 @@ classdef VentricularSeptalDefectCirculation < handle
     end
     
     methods (Access = public)
-        function C = VentricularSeptalDefectCirculation(HR, Emax, Emin) 
+        function C = VentricularSeptalDefectCirculation(HR, EmaxL, EmaxR, Emin) 
             % HR: heart rate (beats per minute)
             % Emax: maximum elastance
             % Emin: minimum elastance
             
             C.setHeartRate(HR);
-            C.Emax = Emax;
+            C.EmaxL = EmaxL;
+            C.EmaxR = EmaxR;
             C.Emin = Emin;
         end
         
@@ -192,9 +194,7 @@ classdef VentricularSeptalDefectCirculation < handle
                  0 0 0 -1/C.L2 1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
         end
         
-        
-        
-        function result = elastance(C, t)
+        function [result1,result2] = elastance(C, t)
             % t: time
             % result: time-varying elastance
             
@@ -204,7 +204,8 @@ classdef VentricularSeptalDefectCirculation < handle
             neg = find(tn < 0); %this line and the next are for generality 
             tn(neg) = tn(neg) + C.Tmax; % in case you give a t < 0
             En = 1.55 * (tn/.7).^1.9 ./ (1 + (tn/.7).^1.9) ./ (1 + (tn/1.17).^21.9); %En is normalized elastance (between 0 and 1)
-            result = (C.Emax-C.Emin)*En+C.Emin; % this rescales the normalized elastance to the range (Emin,Emax)
+            result2 = (C.EmaxL-C.Emin)*En+C.Emin; % this rescales the normalized elastance to the range (Emin,Emax)
+            result1 = (C.EmaxR-C.Emin)*En+C.Emin; 
         end
         
         function result = elastanceFiniteDifference(C, t)
@@ -236,23 +237,22 @@ classdef VentricularSeptalDefectCirculation < handle
             %TO DO
             figure(1);
             hold on;
-            plot(time, state(:, 2), 'r');
-            plot(time, state(:, 1), 'g');
-            plot(time, state(:, 3) + state(:, 4)*C.R4, 'b');
+            plot(time, state(:, 1), 'r');
+            plot(time, state(:, 2), 'g');
+            plot(time, state(:, 5) + state(:, 4)*C.R4, 'b');
             title('Press');
             legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
-            ylim([0 1000]);
             ylabel('Pressure (mmHg)');
             
             %Plot of pressures on the right side of the heart
             %TO DO 
             figure(2);
             hold on;
-            plot(time, state(:, 2), 'r');
-            plot(time, state(:, 1), 'g');
-            plot(time, state(:, 3) + state(:, 4)*C.R4, 'b');
+            plot(time, state(:, 3), 'r');
+            plot(time, state(:, 4), 'g');
+            plot(time, state(:, 5) + state(:, 4)*C.R4, 'b');
             legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
