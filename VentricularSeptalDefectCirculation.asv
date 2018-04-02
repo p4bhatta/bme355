@@ -109,8 +109,8 @@ classdef VentricularSeptalDefectCirculation < handle
                 0 0 0 0 0 0 0; %x6'
                 0 0 0 0 0 0 0]; %x7'
             else
-                A = [-1/(C.C1*C.R8) 0 0 0 1/(C.C1*C.R8) 0 0; %x1'
-                0 -1/(C2*C.R7) 0 1/(C2*C.R7) 0 0 0; %x2'
+                A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
+                0 -1/(C2*C.R7) 0 0 0 0 0; %x2'
                 0 0 0 0 0 0 0; %x3'
                 0 -1/(C4*C.R7) 0 1/(C4*C.R7) 0 0 0; %x4'
                 -1/(C.C5*C.R8) 0 0 0 1/(C.C5*C.R8) 0 0; %x5'
@@ -234,9 +234,9 @@ classdef VentricularSeptalDefectCirculation < handle
             hold on;
             plot(time, state(:, 1), 'r');
             plot(time, state(:, 2), 'g');
-            plot(time, state(:, 3) + state(:, 4)*C.R4, 'b');
-            title('Left Pressure');
-            legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
+            plot(time, state(:, 3), 'b');
+            title('Right Pressure');
+            legend('atrial pressure', 'ventricular pressure', 'pulmonary pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
             ylabel('Pressure (mmHg)');
@@ -247,8 +247,8 @@ classdef VentricularSeptalDefectCirculation < handle
             hold on;
             plot(time, state(:, 3), 'r');
             plot(time, state(:, 4), 'g');
-            plot(time, state(:, 7) + state(:, 4)*C.R6, 'b');
-            title('Right Pressure');
+            plot(time, state(:, 5) + state(:, 7)*C.R6, 'b');
+            title('Left Pressure');
             legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
