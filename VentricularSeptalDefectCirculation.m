@@ -54,7 +54,7 @@ classdef VentricularSeptalDefectCirculation < handle
             C.Tmax = .2+.15*C.tc; % contraction time
         end
         
-        function dx = getDerivative(C, t, x)
+        function dx = getDerivative(C, t, x, heartState)
             
             % x1 - right atrial pressure
             % x2 - right ventricular pressure
@@ -67,28 +67,29 @@ classdef VentricularSeptalDefectCirculation < handle
             % t: time
             % x: state variables [ventricular pressure; atrial pressure; arterial pressure; aortic flow]
             % dx: time derivatives of state variables
+            % heartState: 0 - healthy heart, 1 - moderate septal defect, 2 - severe septal defect
             
             pulmonaryFlow = x(6);
             aorticFlow = x(7);
             t
             if x(1) > x(2) || x(3) > x(4) %flow == 0 
                 disp("1 - Filling");
-                A = filling(C, t, 1);
+                A = filling(C, t, heartState);
             elseif (x(4) > x(5)) || (pulmonaryFlow > 0) || (aorticFlow > 0)%FINISHED
                 disp("2 - Ejection");
-                A = ejection(C, t, 1);
+                A = ejection(C, t, heartState);
             else %flow == 0
                 disp("0 - Isovolumic");
-                A = isovolumic(C, t, 1);
+                A = isovolumic(C, t, heartState);
             end
             dx = A*(x);
         end
         
-        function A = isovolumic(C, t, isSevere)
+        function A = isovolumic(C, t, heartState)
             % Produces the isovolumic A matrix for moderate Ventricular
             % Septal Defect (VSD)
             % t: time
-            % isSevere: 0 or 1 specifying if it is moderate or severe VSD
+            % isHealthy: 0 or 1 specifying if it is moderate or severe VSD
 
             %elastance of the left side of the heart
             [elR,elL] = elastance(C,t);
@@ -100,15 +101,15 @@ classdef VentricularSeptalDefectCirculation < handle
             C2 = 1/elL;
             C4 = 1/elR;
             
-            if (isSevere == 1) 
+            if (heartState == 0) 
                 A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
-                0 (elR/C.R7-delR_dt/elR) 0 -elR/C.R7 0 0 0; %x2'
+                0 0 0 0 0 0 0; %x2'
                 0 0 0 0 0 0 0; %x3'
-                0 elL/C.R7 0 (-elL/C.R7-delL_dt/elL) 0 0 0; %x4'
+                0 0 0 0 0 0 0; %x4'
                 1/(C.C5*C.R8) 0 0 0 -1/(C.C5*C.R8) 0 0; %x5'
                 0 0 0 0 0 0 0; %x6'
-                0 0 0 0 0 0 0]; %x7'
-            else
+                0 0 0 0 0 0 0]; %x7
+            elseif (heartState == 1)
                 A = [-1/(C.C1*C.R8) 0 0 0 1/(C.C1*C.R8) 0 0; %x1'
                 0 -1/(C2*C.R7) 0 1/(C2*C.R7) 0 0 0; %x2'
                 0 0 0 0 0 0 0; %x3'
@@ -116,17 +117,25 @@ classdef VentricularSeptalDefectCirculation < handle
                 -1/(C.C5*C.R8) 0 0 0 1/(C.C5*C.R8) 0 0; %x5'
                 0 0 0 0 0 0 0; %x6'
                 0 0 0 0 0 0 0]; %x7'
+            else
+                A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
+                0 (elR/C.R7-delR_dt/elR) 0 -elR/C.R7 0 0 0; %x2'
+                0 0 0 0 0 0 0; %x3'
+                0 elL/C.R7 0 (-elL/C.R7-delL_dt/elL) 0 0 0; %x4'
+                1/(C.C5*C.R8) 0 0 0 -1/(C.C5*C.R8) 0 0; %x5'
+                0 0 0 0 0 0 0; %x6'
+                0 0 0 0 0 0 0]; %x7'
             end
         end
         
-        function A = filling(C, t, isSevere)
+        function A = filling(C, t, heartState)
             % Produces the isovolumic A matrix for moderate Ventricular
             % Septal Defect (VSD)
             % t: time
             % isSevere: 0 or 1 specifying if it is moderate or severe VSD
 
             % set resistor 7 
-            if (isSevere == 1) 
+            if (heartState == 2) 
                 res7 = 0; 
             else
                 res7 = C.R7;
@@ -138,23 +147,33 @@ classdef VentricularSeptalDefectCirculation < handle
             %elastance of the right side of the heart
             delL_dt = elastanceFiniteDifference(C, t);
             
-            A = [(1/(C.R8*C.C1)+1/(C.R1*C.C1)) -1/(C.C1*C.R1) 0 0 -1/(C.R8*C.C1) 0 0; %x1'
-                elR/C.R1 (delR_dt/elR+elR/C.R7-elR/C.R1) 0 -elR/C.R7 0 0 0; %x2'
-                0 0 1/(C.C3*C.R4) -1/(C.C3*C.R4) 0 0 0; %x3'
-                0 elL/C.R7 -elL/(C.R4) (elL/C.R4-elL/C.R7+delL_dt/elL) 0 0 0; %x4'
-                1/(C.C5*C.R8) 0 0 0 -1/(C.C5*C.R8) 0 0; %x5'
-                0 0 0 0 0 0 0; %x6'
-                0 0 0 0 0 0 0]; %x7'
+            if (heartState == 0)
+                A = [(1/C.R1 + 1/C.R2)/C.C1 -1/(C.C1*C.R8) 0 0 -1/(C.C1*C.R8) 0 0; %x1'
+                    elR/C.R1 (delR_dt/elR - elR/C.R1) 0 0 0 0 0; %x2'
+                    0 0 1/(C.C3*C.R4) -1/(C.C3*C.R4) 0 0 0; %x3'
+                    0 0 -elL/C.R4 (elL/C.R4+delL_dt/elL) 0 0 0; %x4'
+                    1/(C.C5*C.R8) 0 0 0 -1/(C.C5*C.R8) 0 0; %x5'
+                    0 0 0 0 0 0 0; %x6'
+                    0 0 0 0 0 0 0]; %x7'
+            else
+                A = [(1/(C.R8*C.C1)+1/(C.R1*C.C1)) -1/(C.C1*C.R1) 0 0 -1/(C.R8*C.C1) 0 0; %x1'
+                    elR/C.R1 (delR_dt/elR+elR/C.R7-elR/C.R1) 0 -elR/C.R7 0 0 0; %x2'
+                    0 0 1/(C.C3*C.R4) -1/(C.C3*C.R4) 0 0 0; %x3'
+                    0 elL/C.R7 -elL/(C.R4) (elL/C.R4-elL/C.R7+delL_dt/elL) 0 0 0; %x4'
+                    1/(C.C5*C.R8) 0 0 0 -1/(C.C5*C.R8) 0 0; %x5'
+                    0 0 0 0 0 0 0; %x6'
+                    0 0 0 0 0 0 0]; %x7'
+            end
         end
         
-        function A = ejection(C, t, isSevere)
+        function A = ejection(C, t, heartState)
             % Produces the ejection A matrix for Ventricular
             % Septal Defect
             % t: time
             % isSevere: 0 or 1 specifying if it is moderate or severe VSD
 
             % set resistor 7
-            if (isSevere == 1) 
+            if (heartState == 2) 
                 res7 = 0;
             else
                 res7 = C.R7;
@@ -182,13 +201,23 @@ classdef VentricularSeptalDefectCirculation < handle
 %                  -1/(C.C5*C.R8) 0 0 0 1/(C.R8*C.C5) 0 1/C.C5; %x5'
 %                  0 -1/C.L1 -1/C.L1 0 0 -(C.R2+C.R3)/C.L1 0; %x6'
 %                  0 0 0 -1/C.L2 -1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
+            if (heartState == 0)
               A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
+                 0 delR_dt/elR 0 -0 0 elR 0; %x2'
+                 0 0 0 0 0 1/C.C3 0; %x3'
+                 0 0 0 delL_dt/elL  0 0 elL; %x4'
+                 -1/(C.C5*C.R8) 0 0 0 1/(C.R8*C.C5) 0 1/C.C5; %x5'
+                 0 -1/C.L1 1/C.L1 0 0 -(C.R2+C.R3)/C.L1 0; %x6'
+                 0 0 0 -1/C.L2 1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
+            else
+                A = [1/(C.C1*C.R8) 0 0 0 -1/(C.C1*C.R8) 0 0; %x1'
                  0 (delR_dt/elR+elR/C.R7) 0 -elR/C.R7 0 elR 0; %x2'
                  0 0 0 0 0 1/C.C3 0; %x3'
                  0 -elL/C.R7 0 (delL_dt/elL+elL/C.R7)  0 0 elL; %x4'
                  -1/(C.C5*C.R8) 0 0 0 1/(C.R8*C.C5) 0 1/C.C5; %x5'
                  0 -1/C.L1 1/C.L1 0 0 -(C.R2+C.R3)/C.L1 0; %x6'
                  0 0 0 -1/C.L2 1/C.L2 0 -(C.R5+C.R6)/C.L2]; %x7'
+            end
         end
         
         function [elR,elL] = elastance(C, t)
@@ -218,37 +247,35 @@ classdef VentricularSeptalDefectCirculation < handle
             result = (forward - backward) ./ (forwardTime - backwardTime);
         end
         
-        function simulate(C, simulationTime)
+        function simulate(C, simulationTime, heartState)
             % simulationTime: # seconds to simulate
+            % heartState: 0 - healthy heart, 1 - moderate septal defect, 2 - severe septal defect
             % We put all the blood pressure in the atria as an
             % initial condition. Note that we can't get the total blood
             % volume by multiplying by C2, because we're missing the
             % pulmonary loop. 
             
             initialState = [C.nonSlackBloodVolume/C.C1; 0; C.nonSlackBloodVolume/C.C3; 0; 0; 0; 0]; 
-            ofun = @(t,x) C.getDerivative(t,x); % wrapper function because ode45 expects a function rather than a method
+            ofun = @(t,x) C.getDerivative(t,x, heartState); % wrapper function because ode45 expects a function rather than a method
             [time, state] = ode45(ofun, [0 simulationTime], initialState);
 
-            %TO DO
             figure(1);
             hold on;
             plot(time, state(:, 1), 'r');
             plot(time, state(:, 2), 'g');
             plot(time, state(:, 3) + state(:, 4)*C.R4, 'b');
-            title('Left Pressure');
+            title('Right Side Pressures');
             legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
             ylabel('Pressure (mmHg)');
             
-            %Plot of pressures on the right side of the heart
-            %TO DO 
             figure(2);
             hold on;
             plot(time, state(:, 3), 'r');
             plot(time, state(:, 4), 'g');
             plot(time, state(:, 7) + state(:, 4)*C.R6, 'b');
-            title('Right Pressure');
+            title('Left Side Pressures');
             legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
