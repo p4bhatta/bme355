@@ -13,9 +13,8 @@ classdef VentricularSeptalDefectCirculation < handle
         EmaxR;
         Emin;
         
-        nonSlackBloodVolume = 210; % (ml)
+        nonSlackBloodVolume = 20; % (ml)
         
-        %Resistances for the 
         R1 = .5; % between .5 and 2
         R2 = .005;
         R3 = .001;
@@ -75,7 +74,7 @@ classdef VentricularSeptalDefectCirculation < handle
             if x(1) > x(2) || x(3) > x(4) %flow == 0 
                 disp("1 - Filling");
                 A = filling(C, t, heartState);
-            elseif (x(4) > x(5)) || (pulmonaryFlow > 0) || (aorticFlow > 0)%FINISHED
+            elseif (x(4) > x(5)) || x(2) > x(3) || (pulmonaryFlow > 0) || (aorticFlow > 0)
                 disp("2 - Ejection");
                 A = ejection(C, t, heartState);
             else %flow == 0
@@ -261,11 +260,12 @@ classdef VentricularSeptalDefectCirculation < handle
 
             figure(1);
             hold on;
-            plot(time, state(:, 1), 'r');
-            plot(time, state(:, 2), 'g');
-            plot(time, state(:, 3), 'b');
-            title('Right Side Pressures');
-            legend('atrial pressure', 'ventricular pressure', 'pulmonary pressure');
+            plot(time, state(:, 1));
+            plot(time, state(:, 2));
+            plot(time, state(:, 3));
+            plot(-time + 10, state(:, 4));
+            title('Representation of Heart');
+            legend('Pulmonary Pressure','Right Ventricular Pressure', 'Aortic Pressure','Left Ventricular Pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
             ylabel('Pressure (mmHg)');
