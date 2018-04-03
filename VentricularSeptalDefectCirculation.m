@@ -263,9 +263,9 @@ classdef VentricularSeptalDefectCirculation < handle
             hold on;
             plot(time, state(:, 1), 'r');
             plot(time, state(:, 2), 'g');
-            plot(time, state(:, 3) + state(:, 4)*C.R4, 'b');
+            plot(time, state(:, 3), 'b');
             title('Right Side Pressures');
-            legend('atrial pressure', 'ventricular pressure', 'aortic pressure');
+            legend('atrial pressure', 'ventricular pressure', 'pulmonary pressure');
             set(gca, 'FontSize', 18);
             xlabel('Time (s)');
             ylabel('Pressure (mmHg)');
